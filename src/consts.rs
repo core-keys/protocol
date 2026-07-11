@@ -29,6 +29,17 @@ pub const MAX_AUTH_DAEMONS: usize = 8;
 pub const L_COMMIT: &[u8] = b"core-keys/pair/v1/commit";
 pub const L_SAS: &[u8] = b"core-keys/pair/v1/sas";
 
+/// Record-type tag: the first byte of every Noise transport plaintext, so SSH
+/// and FIDO2 records demux by tag rather than by CBOR shape (which the plan
+/// flags as fragile). Both the daemon and the device firmware prepend it.
+/// SSH is daemon-initiated (REQ out, RESP in); FIDO2 is device-initiated.
+pub mod record_type {
+    pub const SIGN_REQ: u8 = 0x01; // daemon -> device (SSH)
+    pub const SIGN_RESP: u8 = 0x02; // device -> daemon (SSH)
+    pub const COAUTH_REQ: u8 = 0x03; // device -> daemon (FIDO2)
+    pub const COAUTH_RESP: u8 = 0x04; // daemon -> device (FIDO2)
+}
+
 /// CKVP message types (`msg_type`, 0x00..0x3F). No other plaintext type exists,
 /// and no plaintext frame may change device state.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
