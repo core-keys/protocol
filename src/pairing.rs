@@ -75,6 +75,56 @@ pub fn sas_string(value: u32) -> std::string::String {
     std::format!("{:0width$}", value, width = SAS_DIGITS as usize)
 }
 
+/// Wire layouts for the plaintext pairing messages (ride CKVP with the msg_type;
+/// see docs §3.1/§4). Fixed-size fields first; only PAIR_INIT is variable
+/// (trailing machine_name). Kept simple so the firmware C port matches trivially.
+///
+///   PAIR_INIT    commit(32) || name_len(u8) || machine_name(name_len)
+///   PAIR_RESP    d_pub(32)  || d_nonce(16)
+///   PAIR_OPEN    h_pub(32)  || h_nonce(16)
+///   PAIR_CONFIRM status(1)   (0 = ok / button pressed, nonzero = abort)
+pub mod wire {
+    use crate::consts::{KEY_LEN, PAIR_NONCE_LEN};
+
+    pub const COMMIT_LEN: usize = 32;
+    pub const MACHINE_NAME_MAX: usize = 32; // display-width cap (docs §4)
+    pub const PAIR_CONFIRM_OK: u8 = 0;
+
+    /// Longest PAIR_INIT: commit + len byte + capped name.
+    pub const PAIR_INIT_MAX: usize = COMMIT_LEN + 1 + MACHINE_NAME_MAX;
+    pub const PAIR_RESP_LEN: usize = KEY_LEN + PAIR_NONCE_LEN;
+    pub const PAIR_OPEN_LEN: usize = KEY_LEN + PAIR_NONCE_LEN;
+
+    /// Parse PAIR_RESP -> (d_pub, d_nonce). Returns None on a bad length.
+    pub fn parse_resp(b: &[u8]) -> Option<(&[u8], &[u8])> {
+        if b.len() != PAIR_RESP_LEN {
+            return None;
+        }
+        Some((&b[..KEY_LEN], &b[KEY_LEN..]))
+    }
+
+    /// Parse PAIR_OPEN -> (h_pub, h_nonce). Returns None on a bad length.
+    pub fn parse_open(b: &[u8]) -> Option<(&[u8], &[u8])> {
+        if b.len() != PAIR_OPEN_LEN {
+            return None;
+        }
+        Some((&b[..KEY_LEN], &b[KEY_LEN..]))
+    }
+
+    /// Parse PAIR_INIT -> (commit, machine_name). Returns None if malformed or
+    /// the declared name length overruns / exceeds the cap.
+    pub fn parse_init(b: &[u8]) -> Option<(&[u8], &[u8])> {
+        if b.len() < COMMIT_LEN + 1 {
+            return None;
+        }
+        let name_len = b[COMMIT_LEN] as usize;
+        if name_len > MACHINE_NAME_MAX || b.len() != COMMIT_LEN + 1 + name_len {
+            return None;
+        }
+        Some((&b[..COMMIT_LEN], &b[COMMIT_LEN + 1..]))
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
