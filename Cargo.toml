@@ -1,9 +1,11 @@
 [package]
 name = "corekeys-protocol"
 version = "0.1.0"
-edition.workspace = true
-license.workspace = true
+edition = "2021"
+rust-version = "1.85"
+license = "MIT OR Apache-2.0"
 description = "Shared no_std core: CKVP framing, pairing SAS, and co-auth record types"
+repository = "https://github.com/core-keys/protocol"
 
 [dependencies]
 sha2 = { version = "0.10", default-features = false }
