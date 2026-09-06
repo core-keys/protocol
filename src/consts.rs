@@ -38,6 +38,7 @@ pub mod record_type {
     pub const SIGN_RESP: u8 = 0x02; // device -> daemon (SSH)
     pub const COAUTH_REQ: u8 = 0x03; // device -> daemon (FIDO2)
     pub const COAUTH_RESP: u8 = 0x04; // daemon -> device (FIDO2)
+    pub const ICON_PUSH: u8 = 0x05; // daemon -> device (site favicon; fire-and-forget)
 }
 
 /// CKVP message types (`msg_type`, 0x00..0x3F). No other plaintext type exists,
