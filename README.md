@@ -1,3 +1,7 @@
+<p align="center">
+  <img src=".github/banner.png" alt="core-keys — split-key authenticator · protocol" width="800">
+</p>
+
 # corekeys-protocol
 
 Shared wire logic for **core-keys**, a split-key hardware authenticator for SSH
